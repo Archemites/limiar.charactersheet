@@ -585,7 +585,47 @@ const EXT_4000 = {
   inasciveis:["Base em Tritão (inativa)","Base em Plutão"],
 };
 
-const EXTENSIONS = { limiar4000: EXT_4000 };
+/* --- LIMIAR 1889: O Oeste Distante ---
+   Profissões do velho oeste, modificadores e equipamento de 1889.
+   Pertencimentos (grupos aos quais o Perito pode se filiar) reaproveitam
+   o campo de "local de nascimento" do LIMIAR 4000, só que renomeado. */
+const EXT_1889 = {
+  nome:"LIMIAR 1889 — O Oeste Distante",
+  desc:"Ano 1889: caubóis, foras-da-lei e justiceiros pelo oeste selvagem. Armas de fogo, cavalos e o Indizível tocando nas terras dos Estados Unidos.",
+  titulo:"LIMIAR 1889",
+  subtitulo:"FICHA DE PERITO // O OESTE DISTANTE",
+  localLabel:"Pertencimento",
+  localPlaceholder:"— nenhum —",
+  localEmptyMsg:"A que grupo o perito pertence (ou não) — cada pertencimento traz vantagens próprias em testes específicos.",
+  profs:{
+    "Médico":{r:{"PSICOMETRIA (INT)":2,"Sanidade máx.":1},eq:"Kit Médico, Tônico de Cocaína",din:"20$"},
+    "Rancheiro":{r:{ACUIDADE:2,VIGOR:1},eq:"Laço, Revólver Single Action, Cavalo de Raça Pura",din:"10$"},
+    "Mercenário":{r:{"PSICOMETRIA (SAP)":2,ACUIDADE:1},eq:"Binóculos, Revólver Single Action x2 ou Rifle de Repetição",din:"5$"},
+    "Fora-da-Lei":{r:{"PSICOMETRIA (SAP)":-2,ACUIDADE:3},eq:"Cavalo Mestiço, Revólver Single Action x2 ou Escopeta de Caça",din:"1d20$"},
+    "Xerife":{r:{ACUIDADE:2,RAZÃO:1},eq:"Revólver Militar, Laço, Cavalo de Raça Pura",din:"10$"},
+    "Vadio":{r:{ESOTERISMO:5},eq:"Instrumento Musical",din:"0$"},
+    "Pistoleiro":{r:{ACUIDADE:3,VIGOR:1},eq:"Revólver Single Action, Cavalo Mestiço, Cigarros Baratos",din:"5$"},
+    "Barista":{r:{ACUIDADE:1,"PSICOMETRIA (INT)":1,ESOTERISMO:-1},eq:"Escopeta de Caça",din:"5$"},
+    "Mercador":{r:{"PSICOMETRIA (INT)":3,VIGOR:-1},eq:"Cigarros de Marca, Garrafa Alcoólica, Caixa de Munição",din:"25$"},
+    "Entregador":{r:{"PSICOMETRIA (INT)":3,VIGOR:1},eq:"Bolsa Grande, Cavalo de Raça Pura, Escopeta de Cano Serrado",din:"5$"},
+    "Padre":{r:{RAZÃO:2,ESOTERISMO:1},eq:"Sermão (habilidade)",din:"1d6$"},
+    "Banqueiro":{r:{"PSICOMETRIA (INT)":2,ACUIDADE:-1},eq:"Cigarros de Marca, Cavalo de Raça Pura",din:"2d10$"},
+  },
+  locais:{
+    "Comunidades Indígenas":{r:{},
+      nota:"O Perito escolhe qualquer uma das milhares de comunidades espalhadas pelo território. Vantagem em Testes de ESOTERISMO."},
+    "Caravana do Holandês":{r:{},
+      nota:"Bando de foras-da-lei liderado pelo velho Holandês, hoje sob Synephos Ma'ashaim. O Perito é um dos membros que desertaram após a morte do antigo líder. Vantagem em Testes de Acerto."},
+    "Agência de Detetives Pinkerton":{r:{},
+      nota:"As mentes mais brilhantes do oeste, com afinidade natural para rastreio e busca. Recebe Distintivo Pinkerton e Vantagem em Testes de Encontrar (ACUIDADE)."},
+    "Estranho sem Nome":{r:{},
+      nota:"Um Lobo-Solitário que vaga pelo mundo buscando seu sustento. Vantagem em testes de VIGOR."},
+    "A Gangue":{r:{},
+      nota:"O Perito inicia já em bando, decidindo com os outros membros as funções de cada um. Vantagem em Testes de Sapiência e 1d100$ Iniciais."},
+  },
+};
+
+const EXTENSIONS = { limiar4000: EXT_4000, limiar1889: EXT_1889 };
 const HDR_BASE = { titulo:"LIMIAR", subtitulo:"FICHA DE PERITO" };
 
 const ARRAY = [10,8,6,4,2];
@@ -653,7 +693,11 @@ function fillProfSelect(){
 function fillLocalSelect(){
   const locais=currentLocais();
   const field=$('#local-field'), out=$('#local-readout');
-  selLocal.innerHTML='<option value="">— não definido —</option>';
+  const label = (ext()&&ext().localLabel) || 'Local de Nascimento';
+  const placeholder = (ext()&&ext().localPlaceholder) || '— não definido —';
+  $('#local-label').textContent = label;
+  selLocal.title = label;
+  selLocal.innerHTML=`<option value="">${placeholder}</option>`;
   selLocal.value='';
   if(!locais){ field.hidden=true; out.hidden=true; return; }
   Object.keys(locais).forEach(k=>{
@@ -854,8 +898,11 @@ function renderLocalReadout(){
   const locais=currentLocais();
   if(!locais)return;
   const out=$('#local-readout'), l=locais[selLocal.value];
-  if(!l){out.innerHTML='Onde o perito nasceu — cada base marca o corpo e a mente de um jeito.';return;}
-  out.innerHTML = refsHtml(l.r) + '<br>' + l.nota;
+  const emptyMsg = (ext()&&ext().localEmptyMsg)
+    || 'Onde o perito nasceu — cada base marca o corpo e a mente de um jeito.';
+  if(!l){out.innerHTML=emptyMsg;return;}
+  const refs=refsHtml(l.r);
+  out.innerHTML = (refs?refs+'<br>':'') + l.nota;
 }
 
 sel.onchange=()=>{ renderProfReadout(); renderAttrs(); };
